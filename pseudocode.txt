@@ -1,0 +1,55 @@
+// Variable to count readers
+int readcount = 0;            // current number of reading processes
+
+// Binary semaphores
+semaphore writer_mutex = 1;       // mutex for writers
+semaphore reader_mutex = 1;      // mutex for readers
+semaphore turn = 1;  // to decide reader/writer turn
+
+Reader() {
+  .
+  .
+  .
+    wait(turn);  //waiting for reader's turn in queue for execution
+    wait(reader_mutex); //ensuring only one read process gets the chance to             
+                      // update read_count
+    readcount++;
+    if(readcount==1){
+        wait(writer_mutex); //first reader will ask for resource 
+                            //access for readers
+    }
+    signal(reader_mutex); //releasing mutex lock for next reader
+    signal(turn);
+
+    /reading is performed/
+    /critical section/
+
+    wait(reader_mutex); //ensuring only one read process gets the chance
+                        // to update readcount
+    readcount--;
+    if(readcount==0){
+        signal(writer_mutex); //freeing the resources for writers to write
+    }
+    signal(reader_mutex);   //releasing mutex lock for next reader
+  .
+  .
+  .
+}
+
+Writer(){
+  .
+  .
+  .
+    wait(turn); //waiting for writer's turn in queue for execution
+    wait(writer_mutex); //waiting for reader to finish reading
+
+    /writing is performed/
+    /critical section/
+
+    signal(writer_mutex); //releasing the resource for the other reader
+                        // or writer process
+    signal(turn); 
+  .
+  .
+  .
+}
